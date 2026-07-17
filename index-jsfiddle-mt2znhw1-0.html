@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html>
+
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>POPportunity</title>
+
+  <style>
+    *{
+margin:0;
+padding:0;
+box-sizing:border-box;
+}
+
+body{
+
+background:#111;
+color:white;
+
+font-family:'Roboto Slab', serif;
+
+min-height:100vh;
+
+display:flex;
+flex-direction:column;
+align-items:center;
+
+overflow:hidden;
+
+}
+
+header{
+text-align:center;
+margin-top:30px;
+}
+
+header h1{
+color:#E62B1E;
+font-size:3rem;
+}
+
+header p{
+margin-top:10px;
+color:#ccc;
+}
+
+#balloonBoard{
+
+width:900px;
+
+display:grid;
+
+grid-template-columns:repeat(5,120px);
+
+gap:25px;
+
+justify-content:center;
+
+margin-top:50px;
+
+}
+
+.balloon{
+
+width:90px;
+height:110px;
+
+border-radius:50% 50% 45% 45%;
+
+position:relative;
+
+cursor:pointer;
+
+transition:.25s;
+
+animation:float 2.8s ease-in-out infinite;
+
+}
+
+.balloon.red{
+background:#E62B1E;
+}
+
+.balloon.black{
+background:#777;
+}
+
+.balloon:hover{
+transform:scale(1.08);
+}
+
+.balloon::before{
+
+content:"";
+
+width:22px;
+height:22px;
+
+background:inherit;
+
+position:absolute;
+
+left:50%;
+bottom:-8px;
+
+transform:translateX(-50%) rotate(45deg);
+
+}
+
+.balloon::after{
+
+content:"";
+
+width:2px;
+height:35px;
+
+background:#ddd;
+
+position:absolute;
+
+left:50%;
+top:108%;
+
+}
+
+@keyframes float{
+
+0%{
+transform:translateY(0);
+}
+
+50%{
+transform:translateY(-8px);
+}
+
+100%{
+transform:translateY(0);
+}
+
+}
+
+.balloon.pop{
+
+transform:scale(0);
+
+opacity:0;
+
+transition:.2s;
+
+}
+
+#popup{
+
+position:fixed;
+
+inset:0;
+
+background:rgba(0,0,0,.65);
+
+display:flex;
+
+justify-content:center;
+
+align-items:center;
+
+}
+
+.hidden{
+display:none!important;
+}
+
+.popup-card{
+
+background:white;
+
+color:#222;
+
+width:420px;
+
+padding:40px;
+
+border-radius:20px;
+
+text-align:center;
+
+}
+
+.popup-card h2{
+
+color:#E62B1E;
+
+margin-bottom:15px;
+
+}
+
+.popup-card button{
+
+margin-top:25px;
+
+background:#E62B1E;
+
+color:white;
+
+border:none;
+
+padding:14px 30px;
+
+border-radius:8px;
+
+cursor:pointer;
+
+font-size:16px;
+
+}
+  </style>
+
+  
+</head>
+<body>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+
+
+
+
+<header>
+
+<h1>P🎈Pportunity</h1>
+
+<p>Choose ONE balloon!</p>
+
+</header>
+
+<main>
+
+<div id="balloonBoard"></div>
+
+</main>
+
+<div id="popup" class="hidden">
+
+<div class="popup-card">
+
+<h2 id="popupTitle"></h2>
+
+<p id="popupPrize"></p>
+
+<button id="playAgain">
+
+Play Again
+
+</button>
+
+</div>
+
+</div>
+
+  <script>
+    // ----------------------
+// SOUNDS
+// ----------------------
+
+const popSound = new Audio(
+"https://raw.githubusercontent.com/vbihnn/P-Pportunity.tedx/f7d51d43dcc4be4669221f10d97aaf8683331378/professionalsfx-balloon-pop-sound-effect-504628.mp3"
+);
+
+const confettiSound = new Audio(
+"https://raw.githubusercontent.com/vbihnn/P-Pportunity.tedx/main/u_jspnqv1glx-1gift-confetti-447240.mp3"
+);
+
+popSound.preload="auto";
+confettiSound.preload="auto";
+
+popSound.volume=0.65;
+confettiSound.volume=0.7;
+
+
+// ----------------------
+
+const balloonBoard=document.getElementById("balloonBoard");
+
+const popup=document.getElementById("popup");
+
+const popupTitle=document.getElementById("popupTitle");
+
+const popupPrize=document.getElementById("popupPrize");
+
+const playAgain=document.getElementById("playAgain");
+
+
+// 20 prizes
+
+const prizes=[
+
+"Keychain",
+"Keychain",
+
+"Snack",
+"Snack",
+"Snack",
+
+"Sticker",
+"Sticker",
+"Sticker",
+
+"5% Voucher",
+"5% Voucher",
+
+"10% Voucher",
+"10% Voucher",
+"10% Voucher",
+
+"15% Voucher",
+"15% Voucher",
+
+"20% Voucher",
+"20% Voucher",
+
+"30% Voucher",
+
+"Mystery Gift",
+
+"Special Prize"
+
+];
+
+shuffle(prizes);
+
+createBoard();
+
+function shuffle(array){
+
+for(let i=array.length-1;i>0;i--){
+
+const j=Math.floor(Math.random()*(i+1));
+
+[array[i],array[j]]=[array[j],array[i]];
+
+}
+
+}
+
+function createBoard(){
+
+balloonBoard.innerHTML="";
+
+for(let i=0;i<20;i++){
+
+const balloon=document.createElement("div");
+
+balloon.className="balloon";
+
+balloon.classList.add(i%2===0?"red":"black");
+
+balloon.dataset.prize=prizes[i];
+
+balloon.addEventListener("click",popBalloon);
+
+balloonBoard.appendChild(balloon);
+
+}
+
+}
+
+function popBalloon(e){
+
+const balloon=e.currentTarget;
+
+if(balloon.classList.contains("pop")) return;
+
+
+// PHÁT SOUND NGAY KHI CLICK
+
+popSound.currentTime=0;
+popSound.play();
+
+balloon.classList.add("pop");
+
+const prize=balloon.dataset.prize;
+
+setTimeout(()=>{
+
+// sound confetti
+
+confettiSound.currentTime=0;
+confettiSound.play();
+
+confetti({
+
+particleCount:250,
+
+spread:120,
+
+origin:{y:0.6}
+
+});
+
+popupTitle.innerHTML="🎉 Congratulations!";
+
+popupPrize.innerHTML=`You won<br><strong>${prize}</strong>`;
+
+popup.classList.remove("hidden");
+
+},250);
+
+}
+
+playAgain.onclick=()=>location.reload();
+  </script>
+</body>
+</html>
